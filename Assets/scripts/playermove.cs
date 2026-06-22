@@ -19,17 +19,18 @@ public class playermove : MonoBehaviour
     public float rspeed = 12f;
     public float gravity = -9.81f;
     public float speed;
-    public Transform groundCheck;
-    public float groundDistance = 0.4f;
-    public LayerMask groundMask;
+    public Vector3 dir;
+
+
+
     public float jumpFore = 2.5f;
     float speed2;
-    public float rot = 200f;
+    public float rot = 10f;
  
     Vector2 verlosity2;
 
    [SerializeField] Vector3 velocity;
-    [SerializeField] bool isGrounded;
+   // [SerializeField] bool isGrounded;
     private void Awake()
     {
         map = input.FindActionMap(Action);
@@ -51,9 +52,9 @@ public class playermove : MonoBehaviour
     void Update()
     {
        
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        
 
-        if (isGrounded && velocity.y < 0)
+        if (controller.isGrounded && velocity.y < 0)
         {
             velocity.y = -2f;
         }
@@ -74,13 +75,13 @@ public class playermove : MonoBehaviour
         animator.SetFloat("Speed", speed2);
         velocity.x = Mathf.Lerp(velocity.x, verlosity2.x * speed, Time.deltaTime * 20f);
         velocity.z = Mathf.Lerp(velocity.z, verlosity2.y * speed, Time.deltaTime * 20f);
-        float angle = verlosity2.x * rot * Time.deltaTime;
-        Vector3 dir = new Vector3(0 , verlosity2.y, 0);
         
+        dir = new Vector3(verlosity2.x, 0, verlosity2.y);
         
+
         if (j.WasPressedThisFrame())
         {
-            if (isGrounded)
+            if (controller.isGrounded)
             {
               velocity.y = Mathf.Sqrt(2f * jumpFore * -gravity);
               Debug.Log("jump");
@@ -92,8 +93,17 @@ public class playermove : MonoBehaviour
 
         }
         
-        animator.SetBool("isGrounded", isGrounded);
+        animator.SetBool("isGrounded", controller.isGrounded);
         controller.Move(velocity * Time.deltaTime);
+        if (dir.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(dir.normalized);
+            transform.rotation = Quaternion.Lerp(
+                transform.rotation,
+                targetRotation,
+                Time.deltaTime * rot
+            );
+        }
 
         velocity.y += gravity * Time.deltaTime;
 
